@@ -18,39 +18,86 @@ actions = {
     3: "DOWN"
 }
 
-st.subheader("Warehouse")
+next_state = {
+    0:  {"LEFT": 0,  "RIGHT": 1,  "UP": 0,  "DOWN": 4},
+    1:  {"LEFT": 0,  "RIGHT": 2,  "UP": 1,  "DOWN": 5},
+    2:  {"LEFT": 1,  "RIGHT": 3,  "UP": 2,  "DOWN": 6},
+    3:  {"LEFT": 2,  "RIGHT": 3,  "UP": 3,  "DOWN": 7},
 
-st.write("""
-**S0 | S1 | S2 | S3**
+    4:  {"LEFT": 4,  "RIGHT": 5,  "UP": 0,  "DOWN": 8},
+    5:  {"LEFT": 4,  "RIGHT": 6,  "UP": 1,  "DOWN": 9},
+    6:  {"LEFT": 5,  "RIGHT": 7,  "UP": 2,  "DOWN": 10},
+    7:  {"LEFT": 6,  "RIGHT": 7,  "UP": 3,  "DOWN": 11},
 
-**S4 | S5 | S6 | S7**
+    8:  {"LEFT": 8,  "RIGHT": 9,  "UP": 4,  "DOWN": 12},
+    9:  {"LEFT": 8,  "RIGHT": 10, "UP": 5,  "DOWN": 13},
+    10: {"LEFT": 9,  "RIGHT": 11, "UP": 6,  "DOWN": 14},
+    11: {"LEFT": 10, "RIGHT": 11, "UP": 7, "DOWN": 15},
 
-**S8 | S9 | S10 | S11**
-
-**S12 | S13 | S14 | 🟢 GOAL**
-""")
+    12: {"LEFT": 12, "RIGHT": 13, "UP": 8,  "DOWN": 12},
+    13: {"LEFT": 12, "RIGHT": 14, "UP": 9, "DOWN": 13},
+    14: {"LEFT": 13, "RIGHT": 15, "UP": 10, "DOWN": 14},
+    15: {"LEFT": 15, "RIGHT": 15, "UP": 15, "DOWN": 15}
+}
 
 state = st.number_input(
-    "Enter the current state:",
+    "Enter starting state:",
     min_value=0,
     max_value=15,
     value=0,
     step=1
 )
 
-if st.button("Find Best Action"):
+if st.button("Find Full Path to Goal"):
 
-    best_action_number = Q[state].argmax()
+    state = int(state)
 
-    best_action = actions[best_action_number]
+    if state == 15:
+        st.success("🎯 The robot is already at the GOAL!")
 
-    st.success(
-        f"Best action for State {state} is **{best_action}**"
-    )
+    else:
+        current_state = state
+        path = [current_state]
+        action_path = []
 
-    st.subheader("Q-Values")
+        visited = set()
 
-    st.write(f"LEFT  : {Q[state][0]:.2f}")
-    st.write(f"RIGHT : {Q[state][1]:.2f}")
-    st.write(f"UP    : {Q[state][2]:.2f}")
-    st.write(f"DOWN  : {Q[state][3]:.2f}")
+        while current_state != 15 and current_state not in visited:
+
+            visited.add(current_state)
+
+            best_action_number = int(Q[current_state].argmax())
+            best_action = actions[best_action_number]
+
+            action_path.append(best_action)
+
+            current_state = next_state[current_state][best_action]
+
+            path.append(current_state)
+
+        st.subheader("🚀 Complete Path")
+
+        path_text = " → ".join(
+            [f"S{s}" for s in path]
+        )
+
+        st.success(path_text)
+
+        st.subheader("🧭 Actions")
+
+        action_text = " → ".join(action_path)
+
+        st.info(action_text)
+
+        st.subheader("📍 Step-by-Step Route")
+
+        for i in range(len(action_path)):
+            st.write(
+                f"Step {i + 1}: S{path[i]} "
+                f"→ **{action_path[i]}** "
+                f"→ S{path[i + 1]}"
+            )
+
+        st.subheader("🎯 Goal")
+
+        st.success("Robot reached GOAL (S15)!")
